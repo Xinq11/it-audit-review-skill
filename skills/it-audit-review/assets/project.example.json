@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "engagement": {
+    "name": "合成演示项目",
+    "period_start": "2026-01-01",
+    "period_end": "2026-09-30",
+    "framework": null,
+    "methodology_version": null
+  },
+  "tables": [
+    {
+      "kind": "change_samples",
+      "file": "synthetic-it-audit.xlsx",
+      "sheet": "变更样本",
+      "header_row": 1,
+      "data_start_row": 2,
+      "data_end_row": 4,
+      "columns": {
+        "sample_id": "A",
+        "control_id": "B",
+        "change_type": "C",
+        "approved_at": "D",
+        "tested_at": "E",
+        "deployed_at": "F",
+        "evidence_ref": "G"
+      },
+      "expected_headers": {
+        "sample_id": "样本编号",
+        "control_id": "控制编号",
+        "change_type": "变更类型",
+        "approved_at": "批准时间",
+        "tested_at": "测试时间",
+        "deployed_at": "上线时间",
+        "evidence_ref": "证据引用"
+      },
+      "policy": {
+        "source": "合成普通变更政策：上线前须获批并完成测试。仅用于示范。",
+        "standard_values": ["普通"],
+        "emergency_values": ["紧急"],
+        "require_preapproval": true,
+        "require_predeployment_test": true
+      }
+    },
+    {
+      "kind": "threshold_cases",
+      "file": "synthetic-it-audit.xlsx",
+      "sheet": "应用测试",
+      "header_row": 1,
+      "data_start_row": 2,
+      "data_end_row": 4,
+      "columns": {
+        "sample_id": "A",
+        "control_id": "B",
+        "amount": "C",
+        "expected_result": "D",
+        "actual_result": "E",
+        "evidence_ref": "F"
+      },
+      "expected_headers": {
+        "sample_id": "样本编号",
+        "control_id": "控制编号",
+        "amount": "金额",
+        "expected_result": "预期结果",
+        "actual_result": "实际结果",
+        "evidence_ref": "证据引用"
+      },
+      "policy": {
+        "source": "合成阈值政策：金额严格大于1000阻止，否则允许。仅用于示范。",
+        "operator": ">",
+        "threshold": 1000,
+        "when_true": "阻止",
+        "when_false": "允许"
+      }
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "IT 审计底稿复核"
+  short_description: "复核 ITGC 与 ITAC 底稿及证据，输出可定位的复核意见和未完成检查"
+  default_prompt: "使用 $it-audit-review 只读复核指定的 ITGC / ITAC 底稿及附件，输出有证据定位的 review notes 和复核覆盖情况。"
