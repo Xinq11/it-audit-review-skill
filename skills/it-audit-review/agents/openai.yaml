@@ -1,4 +1,4 @@
 interface:
-  display_name: "IT 审计底稿复核"
-  short_description: "复核 ITGC 与 ITAC 底稿及证据，输出可定位的复核意见和未完成检查"
-  default_prompt: "使用 $it-audit-review 只读复核指定的 ITGC / ITAC 底稿及附件，输出有证据定位的 review notes 和复核覆盖情况。"
+  display_name: "ITAC 接口控制底稿复核"
+  short_description: "复核接口源到目标、完整准确性、重复及异常重传，输出有证据定位的意见"
+  default_prompt: "使用 $it-audit-review 只读复核指定的 ITAC 接口控制底稿和证据，沿源到目标及异常重传链路输出中文 review notes、证据位置和覆盖限制。"

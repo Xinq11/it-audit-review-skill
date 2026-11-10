@@ -1,0 +1,2 @@
+ticket_id,interface_id,batch_id,business_id,status,opened_at,closed_at,corrected_document_id,comment
+T102,IF-ORD-GL-01,B20261031,O102,CLOSED,2026-11-01T00:16:00+08:00,2026-11-01T00:25:00+08:00,,集成平台显示请求已接收，关闭工单

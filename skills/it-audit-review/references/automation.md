@@ -1,53 +1,29 @@
-# 可选脚本：读取、事实核对与结果校验
+# 可选文件提取工具
 
-只有需要复用这些操作时才读取本文件。主流程可以使用宿主已有的文件、视觉和代码执行能力，直接形成 review notes；Python 和项目配置不是使用 skill 的前置要求。
+默认使用宿主现有文件、视觉和计算能力。只有遇到读取能力不足或需要反复执行同样的 Excel 提取时，才考虑 `scripts/extract_workpapers.py`；未使用脚本本身不构成复核限制。
 
-## 何时选择这些工具
+## 用途及运行
 
-| 工具 | 适用用途 | 输入与产物 |
-|---|---|---|
-| `extract_workpapers.py` | 需要复用 Excel 内容、图片及位置提取，或宿主缺少相应解析能力 | 输入目录 → `manifest.json` 和 `media/` |
-| `check_facts.py` | 需要反复核对已适配的普通变更或金额阈值样本表 | 上述清单 + 项目映射/政策 JSON → 候选意见及跳过记录 |
-| `validate_review.py` | 选择结构化结果后需要机械检查引用、覆盖及输入哈希 | 上述清单 + 指定模式的 `review.json` → 验证及中文报告 |
+脚本可读取 XLSX/XLSM 单元格、隐藏表、公式保存缓存、传统批注、合并区及内嵌图片/锚点；也支持独立图片、UTF-8 文本、Markdown、CSV。PDF 文本提取需要现有环境可用的可选 `pypdf`。
 
-脚本使用 Python 3.10+。Excel/图片/文本路径使用标准库，PDF 文本提取需要现有环境可用的可选 `pypdf`。附带解析器不读取 Word 或旧版 `.xls`，不执行宏/公式/外链，不进行自动 OCR；宿主拥有适当工具时可另行读取并按主流程复核。读取限制会报告在清单中。
-
-按实际用途选择工具，不要求运行全部三项。使用相对脚本路径时以本 skill 目录为基准；也可换成脚本绝对路径。示例：
+以 skill 目录为当前目录，或换成脚本绝对路径：
 
 ```bash
 python3 scripts/extract_workpapers.py /absolute/input --output-dir /absolute/review/extracted
-python3 scripts/check_facts.py /absolute/review/extracted/manifest.json --config /absolute/project.json --out /absolute/review/facts.json
 ```
 
-Agent 仍需查看证据、核实候选并形成最终意见。需要附带校验器时，按 [输出约定中的结构化模式](output-contract.md) 生成结果，再运行：
+输出 `manifest.json` 及 `media/`，用于查看提取状态、文件哈希、单元格和图片位置。输出目录必须在输入之外且新建或为空；不覆盖输入或已有结果。
+
+`extracted` 只表示技术提取完成，后续接口规则复核及原图查看仍由 Agent 执行。报告可以直接使用原文件位置；无需为了符合提取清单而重做已有宿主读取工作。
+
+## 范围与依赖
+
+Python 3.10+；Excel/图片/文本使用标准库，PDF 可选 `pypdf`。脚本不执行宏、公式或外链，不自动 OCR，不支持 Word 与旧版 `.xls`。宿主能可靠读取其他格式时，可按主流程复核。图形、文本框、图表、特殊公式、外链等未解析内容会列为限制，不代表已经看过。
+
+本接口专用版本没有预置字段映射、日期/金额判定、接口自动对账或结果校验引擎。以前的普通变更和金额阈值样本检查不适用于本范围，未随本版本分发。对账需要时使用宿主工具或临时代码，先明确业务键、对应关系、有效状态、币种/单位、期间及转换口径；不可把固定一对一/总额相等逻辑套给所有接口。
+
+脚本的读取回归测试可从仓库根目录运行；它们不验证接口业务判断准确率：
 
 ```bash
-python3 scripts/validate_review.py /absolute/review/extracted/manifest.json /absolute/review/review.json --report /absolute/review/review-notes.md
+python3 -m unittest discover -s skills/it-audit-review/tests
 ```
-
-输出位置需在输入目录之外且未被使用。修订已生成结果时换用新文件名或先归档该次结果，不覆盖输入资料。结构及位置校验不验证专业判断或证据真实性。
-
-## 事实核对配置
-
-`check_facts.py` 接收抽取清单及项目 JSON 配置，输出候选意见、已执行检查及跳过原因。它不调用模型，不读取服务器，不给出控制有效结论。
-
-配置参考 `assets/project.example.json`。复制到项目工作目录后，核对 `file` 为清单中的相对路径、`sheet` 为精确表名、`header_row` 为一基表头行号，`columns` 为字段到 Excel 列字母的映射。必须明确 `data_start_row` / `data_end_row`（一基、含两端），将脚注、合计与截图说明排除在样本范围外。`expected_headers` 必须覆盖映射字段并匹配实际表头，避免误用其他模板。文件、工作表、行边界或表头不匹配时跳过该表并报告原因。
-
-`policy.source` 必须记录当前政策或方法论依据。仅确认映射和政策后运行；不同控制使用不同表配置，不能把一条政策覆盖到所有控制。
-
-支持 `change_samples`：样本编号、控制编号、变更类型、批准时间、测试时间、上线时间、证据引用。`standard_values` 明确普通变更；`emergency_values` 明确紧急变更。未知及紧急类型不套用普通顺序规则。政策的布尔开关分别启用批准/测试早于上线检查。仅接受 ISO 日期或日期时间，不猜测日月顺序。只有日期而无时刻且为同一天时，无法判断先后，列为跳过。无时区和有时区时间混合时也不比较。
-
-支持 `threshold_cases`：金额、预期结果、实际结果等。政策明确 `operator`（`>`、`>=`、`<`、`<=`、`==`）、`threshold`、`when_true`、`when_false`。脚本使用 Decimal 独立重算金额条件，对比底稿记录的预期值及实测值；它不验证系统实际运行。标签按精确文字匹配，先在配置中统一。
-
-| ID | 事实核对 | 输出及边界 |
-|---|---|---|
-| FACT-001 | 已明确为普通变更，批准时间晚于上线 | `potential_control_exception`；仅基于底稿记录，需原始证据确认 |
-| FACT-002 | 已明确为普通变更，测试时间晚于上线 | 同上 |
-| FACT-003 | 表格已存在的样本行缺少关键字段或日期/金额不可解析 | `documentation_issue`；不推断客户未执行 |
-| FACT-004 | 同一映射表内样本编号重复 | `documentation_issue`；跨表重复不自动算错 |
-| FACT-005 | 引用看起来是独立证据文件，但在本次输入中没有精确相对路径或唯一同名文件 | `evidence_gap`；同名歧义须人工确认，不断言文件不存在 |
-| FACT-006 | 配置的金额规则与记录的预期结果或实测结果不一致 | 预期值错误为 `documentation_issue`，实测不符为 `potential_control_exception`；需核对配置、参数和原始证据 |
-
-“内嵌截图”“待补”等文本不视为已匹配附件，不直接当成缺文件；一律列入人工证据匹配清单。不存在相关规则、未配置政策、空表、字段精度不足、公式无可信缓存均不能显示为检查通过。公式缓存只是保存时的值，事实检查会跳过使用公式的关键字段，交由 agent 核实。
-
-当前脚本没有实现自动抽样量判断、工作日停用时限、恢复能力评价、自动控制全年依赖结论。这些仍由 agent 根据相应参考规则复核，并明确记录是否完成。
